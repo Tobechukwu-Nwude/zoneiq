@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 PAIRS = ["EURUSD=X",
          "GBPUSD=X",
-         "XAUUSD=X",
+         "GC=F",
          "AUDUSD=X",
          "USDCAD=X",
          "EURCAD=X",
@@ -17,15 +17,16 @@ TIMEFRAMES = {"D1": {"interval":"1d", "period": "180d"},
               "H4": {"interval":"1h", "period": "60d"},
               "H1": {"interval":"1h", "period": "30d"}}
 
-PAIR_LABELS = {"EURUSD=X":"EURUSD",
-               "GBPUSD=X":"GBPUSD",
-               "USDJPY=X":"USDJPY",
-               "GBPJPY=X":"GBPJPY",
-               "XAUUSD=X":"XAUUSD",
-               "AUDUSD=X":"AUDUSD",
-               "USDCAD=X":"USDCAD",
-               "EURCAD=X":"EURCAD",
-               }
+PAIR_LABELS = {
+    "EURUSD=X": "EURUSD",
+    "GBPUSD=X": "GBPUSD",
+    "GC=F": "XAUUSD",    # ← was "XAUUSD=X": "XAUUSD"
+    "AUDUSD=X": "AUDUSD",
+    "USDCAD=X": "USDCAD",
+    "EURCAD=X": "EURCAD",
+    "USDJPY=X": "USDJPY",
+    "GBPJPY=X": "GBPJPY",
+}
 
 def fetch_ohlcv(symbol: str, timeframe: str) -> pd.DataFrame | None:
     try:

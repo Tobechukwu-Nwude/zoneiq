@@ -108,19 +108,3 @@ def analyze_htf_bias(pair_data: dict) -> dict:
         "trade_direction": direction,
     }
 
-
-if __name__ == "__main__":
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-    from data.fetcher import fetch_ohlcv
-
-    data = {
-        "D1": fetch_ohlcv("GBPUSD=X", "D1"),
-        "H4": fetch_ohlcv("GBPUSD=X", "H4"),
-    }
-
-    bias = analyze_htf_bias(data)
-    for k, v in bias.items():
-        print(f"{k}: {v}")

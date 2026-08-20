@@ -1,6 +1,6 @@
 import pandas as pd
 from dataclasses import dataclass
-from zone_detector import Zone
+from engine.zone_detector import Zone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -121,24 +121,4 @@ def calculate_rr(
     )
 
 
-if __name__ == "__main__":
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-    from data.fetcher import fetch_ohlcv
-    from engine.zone_detector import detect_zones
-
-    df = fetch_ohlcv("GBPUSD=X", "H4")
-    zones = detect_zones(df, "H4")
-    price = float(df.iloc[-1]["close"])
-
-    fresh = [z for z in zones if z.is_fresh]
-    print(f"Current price: {price:.5f} | Fresh zones: {len(fresh)}\n")
-
-    for z in fresh:
-        setup = calculate_rr("GBPUSD", z, zones, price)
-        if setup:
-            print(f"{setup.direction.upper():5} | entry {setup.entry:.5f} | "
-                  f"SL {setup.stop_loss:.5f} | TP {setup.take_profit:.5f} | "
-                  f"RR 1:{setup.rr_ratio} | risk {setup.risk_pips}p")

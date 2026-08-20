@@ -142,19 +142,3 @@ def detect_zones(df: pd.DataFrame, timeframe: str, min_impulse: float = 0.1) -> 
     return zones
 
 
-if __name__ == "__main__":
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-    from data.fetcher import fetch_ohlcv
-
-    df = fetch_ohlcv("GBPUSD=X", "H4")
-    zones = detect_zones(df, "H4")
-
-    fresh = [z for z in zones if z.is_fresh]
-    print(f"Total zones: {len(zones)} | Fresh: {len(fresh)}")
-
-    for z in fresh[:5]:
-        print(f"{z.type.upper():7} {z.bottom:.5f} - {z.top:.5f} | "
-              f"impulse {z.impulse_strength}% | touches {z.touch_count}")
