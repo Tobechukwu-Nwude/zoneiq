@@ -53,7 +53,7 @@ def run_scan() -> dict:
             tradeable.append(z)
 
         for zone in tradeable:
-            setup = calculate_rr(pair, zone, every_zone, current_price)
+            setup = calculate_rr(pair, zone, every_zone, current_price, df=tf_data.get(zone.timeframe))
             if setup is None:
                 continue
             all_setups.append(score_setup(setup, bias))

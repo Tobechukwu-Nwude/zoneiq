@@ -39,24 +39,36 @@ def get_pip_size(pair: str) -> float:
     return PIP_SIZES.get(pair, 0.0001)
 
 
-def find_target_zone(zones: list[Zone], zone: Zone, current_price: float) -> float | None:
+def calculate_atr(df: pd.DataFrame, period: int = 14) -> float:
+    if df is None or len(df) < period + 1:
+        return 0.0
+
+    high_low = df["high"] - df["low"]
+    high_close = (df["high"] - df["close"].shift()).abs()
+    low_close = (df["low"] - df["close"].shift()).abs()
+
+    true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+    return float(true_range.tail(period).mean())
+
+
+def find_target_zone(zones: list[Zone], zone: Zone, entry: float) -> float | None:
     opposing = "supply" if zone.type == "demand" else "demand"
     candidates = []
 
     for z in zones:
         if z.type != opposing:
             continue
-        if zone.type == "demand" and z.bottom > current_price:
-            candidates.append(z)
-        elif zone.type == "supply" and z.top < current_price:
-            candidates.append(z)
+        if zone.type == "demand" and z.bottom > entry:
+            candidates.append(z.bottom)
+        elif zone.type == "supply" and z.top < entry:
+            candidates.append(z.top)
 
     if not candidates:
         return None
 
     if zone.type == "demand":
-        return min(candidates, key=lambda z: z.bottom).bottom
-    return max(candidates, key=lambda z: z.top).top
+        return min(candidates)
+    return max(candidates)
 
 
 def calculate_rr(
@@ -64,44 +76,53 @@ def calculate_rr(
     zone: Zone,
     all_zones: list[Zone],
     current_price: float,
-    sl_buffer_pips: int = 5,
+    df: pd.DataFrame = None,
     min_rr: float = 3.0,
+    max_rr: float = 10.0,
 ) -> TradeSetup | None:
     pip = get_pip_size(pair)
-    buffer = sl_buffer_pips * pip
+
+    atr = calculate_atr(df) if df is not None else 0.0
+    buffer = atr * 0.5 if atr > 0 else 10 * pip
 
     if zone.type == "demand":
         entry = zone.top
         stop_loss = zone.bottom - buffer
         risk = entry - stop_loss
-        if risk <= 0:
-            return None
-        target = find_target_zone(all_zones, zone, current_price)
-        take_profit = target if target else entry + (risk * min_rr)
-        reward = take_profit - entry
         direction = "long"
-
     elif zone.type == "supply":
         entry = zone.bottom
         stop_loss = zone.top + buffer
         risk = stop_loss - entry
-        if risk <= 0:
-            return None
-        target = find_target_zone(all_zones, zone, current_price)
-        take_profit = target if target else entry - (risk * min_rr)
-        reward = entry - take_profit
         direction = "short"
-
     else:
         return None
 
-    if reward <= 0 or risk <= 0:
+    if risk <= 0:
+        return None
+
+    target = find_target_zone(all_zones, zone, entry)
+
+    if target is None:
+        take_profit = entry + (risk * min_rr) if direction == "long" else entry - (risk * min_rr)
+    else:
+        take_profit = target
+
+    reward = take_profit - entry if direction == "long" else entry - take_profit
+
+    if reward <= 0:
         return None
 
     rr_ratio = round(reward / risk, 2)
 
     if rr_ratio < min_rr:
         return None
+
+    if rr_ratio > max_rr:
+        capped = risk * max_rr
+        take_profit = entry + capped if direction == "long" else entry - capped
+        reward = capped
+        rr_ratio = max_rr
 
     return TradeSetup(
         pair=pair,
@@ -119,6 +140,3 @@ def calculate_rr(
         impulse_strength=zone.impulse_strength,
         formed_at=zone.formed_at,
     )
-
-
-
