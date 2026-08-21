@@ -41,6 +41,11 @@ def run_scan() -> dict:
 
         wanted = "demand" if direction == "long" else "supply"
         tradeable = []
+        if tradeable:
+            if direction == "long":
+                tradeable = [min(tradeable, key=lambda z: z.bottom)]
+            else:
+                tradeable = [max(tradeable, key=lambda z: z.top)]
         for z in every_zone:
             if z.type != wanted:
                 continue

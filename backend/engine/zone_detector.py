@@ -62,6 +62,40 @@ def check_freshness(df: pd.DataFrame, zone: Zone) -> tuple[bool, int]:
             touch_count += 1
 
     return touch_count == 0, touch_count
+def deduplicate(zones: list[Zone]) -> list[Zone]:
+    if not zones:
+        return []
+
+    kept = []
+
+    for zone in zones:
+        overlapping = None
+
+        for k in kept:
+            if k.type != zone.type or k.timeframe != zone.timeframe:
+                continue
+
+            overlap_top = min(zone.top, k.top)
+            overlap_bottom = max(zone.bottom, k.bottom)
+
+            if overlap_bottom >= overlap_top:
+                continue
+
+            zone_size = zone.top - zone.bottom
+            if zone_size <= 0:
+                continue
+
+            if (overlap_top - overlap_bottom) / zone_size > 0.3:
+                overlapping = k
+                break
+
+        if overlapping is None:
+            kept.append(zone)
+        elif zone.impulse_strength > overlapping.impulse_strength:
+            kept.remove(overlapping)
+            kept.append(zone)
+
+    return kept
 
 
 def detect_zones(df: pd.DataFrame, timeframe: str, min_impulse: float = 0.1) -> list[Zone]:
@@ -139,6 +173,6 @@ def detect_zones(df: pd.DataFrame, timeframe: str, min_impulse: float = 0.1) -> 
         zone.is_fresh, zone.touch_count = check_freshness(df, zone)
         zones.append(zone)
 
-    return zones
+    return deduplicate(zones)
 
 

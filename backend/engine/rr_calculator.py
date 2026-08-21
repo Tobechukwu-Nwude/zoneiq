@@ -70,6 +70,19 @@ def find_target_zone(zones: list[Zone], zone: Zone, entry: float) -> float | Non
         return min(candidates)
     return max(candidates)
 
+def find_structural_stop(df: pd.DataFrame, zone: Zone, lookback: int = 10) -> float | None:
+    if df is None or zone.formed_index >= len(df):
+        return None
+
+    start = max(0, zone.formed_index - lookback)
+    window = df.iloc[start : zone.formed_index + 4]
+
+    if window.empty:
+        return None
+
+    if zone.type == "demand":
+        return float(window["low"].min())
+    return float(window["high"].max())
 
 def calculate_rr(
     pair: str,
@@ -83,19 +96,26 @@ def calculate_rr(
     pip = get_pip_size(pair)
 
     atr = calculate_atr(df) if df is not None else 0.0
-    buffer = atr * 0.5 if atr > 0 else 10 * pip
+    buffer = atr * 0.25 if atr > 0 else 5 * pip
+
+    structural = find_structural_stop(df, zone)
 
     if zone.type == "demand":
         entry = zone.top
-        stop_loss = zone.bottom - buffer
+        zone_stop = zone.bottom - buffer
+        stop_loss = min(zone_stop, structural - buffer) if structural else zone_stop
         risk = entry - stop_loss
         direction = "long"
     elif zone.type == "supply":
         entry = zone.bottom
-        stop_loss = zone.top + buffer
+        zone_stop = zone.top + buffer
+        stop_loss = max(zone_stop, structural + buffer) if structural else zone_stop
         risk = stop_loss - entry
         direction = "short"
     else:
+        return None
+    min_risk = max(atr * 0.3, 8 * pip)
+    if risk < min_risk:
         return None
 
     if risk <= 0:

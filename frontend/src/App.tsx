@@ -90,9 +90,16 @@ export default function App() {
     }
   };
 
-  const refresh = async () => {
+    const refresh = async () => {
     await fetch(`${API}/scan/refresh`, { method: "POST" });
-    setTimeout(load, 3000);
+    setData((prev) => (prev ? { ...prev, refreshing: true } : prev));
+
+    const poll = setInterval(async () => {
+      const res = await fetch(`${API}/scan`);
+      const json: ScanResult = await res.json();
+      setData(json);
+      if (!json.refreshing) clearInterval(poll);
+    }, 3000);
   };
 
   useEffect(() => {

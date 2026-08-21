@@ -1,7 +1,7 @@
 import logging
 import threading
 
-from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -91,11 +91,12 @@ def get_scan():
 
 
 @app.post("/scan/refresh")
-def refresh(background_tasks: BackgroundTasks):
+def refresh():
     if _cache["scanning"]:
         return {"status": "already_scanning"}
 
-    background_tasks.add_task(_scan_and_cache)
+    thread = threading.Thread(target=_scan_and_cache, daemon=True)
+    thread.start()
     return {"status": "triggered"}
 
 
