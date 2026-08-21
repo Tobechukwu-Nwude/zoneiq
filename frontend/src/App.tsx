@@ -22,6 +22,11 @@ function SetupCard({ setup }: { setup: Setup }) {
             {setup.direction.toUpperCase()}
           </span>
           <span className="tf">{setup.zone.timeframe}</span>
+          <span className={`status ${setup.entry_status}`}>
+            {setup.entry_status === "confirmed" && "✓ CONFIRMED"}
+            {setup.entry_status === "at_zone" && "AT ZONE — no shift yet"}
+            {setup.entry_status === "approaching" && `${setup.distance_pct}% away`}
+          </span>
         </div>
         <div className="score" style={{ color: scoreColour(setup.score) }}>
           {setup.score}

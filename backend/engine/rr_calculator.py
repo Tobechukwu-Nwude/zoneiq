@@ -33,6 +33,9 @@ class TradeSetup:
     timeframe: str
     impulse_strength: float
     formed_at: str
+    entry_status: str = "unknown"
+    distance_pct: float = 0.0
+    confirmed: bool = False
 
 
 def get_pip_size(pair: str) -> float:

@@ -6,6 +6,7 @@ from engine.zone_detector import detect_zones
 from engine.htf_analyzer import analyze_htf_bias
 from engine.rr_calculator import calculate_rr
 from engine.scorer import score_setup, rank_setups, ScoredSetup
+from engine.confirmation import evaluate_entry
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +62,14 @@ def run_scan() -> dict:
             setup = calculate_rr(pair, zone, every_zone, current_price, df=tf_data.get(zone.timeframe))
             if setup is None:
                 continue
+
+            ltf = tf_data.get("M15") if zone.timeframe == "H1" else tf_data.get("H1")
+            entry = evaluate_entry(zone, current_price, ltf)
+
+            setup.entry_status = entry["status"]
+            setup.distance_pct = entry["distance_pct"]
+            setup.confirmed = entry["confirmed"]
+
             all_setups.append(score_setup(setup, bias))
 
     ranked = rank_setups(all_setups)
@@ -84,6 +93,9 @@ def serialize(result: dict) -> dict:
             "zone_type": s.zone_type,
             "score": scored.score,
             "breakdown": scored.breakdown,
+            "entry_status": s.entry_status,
+            "distance_pct": s.distance_pct,
+            "confirmed": s.confirmed,
             "zone": {
                 "top": s.zone_top,
                 "bottom": s.zone_bottom,

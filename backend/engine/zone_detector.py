@@ -53,9 +53,10 @@ def has_imbalance(candles: pd.DataFrame, direction: str) -> bool:
     return False
 
 
-def check_freshness(df: pd.DataFrame, zone: Zone) -> tuple[bool, int]:
+def check_freshness(df: pd.DataFrame, zone: Zone, exclude_recent: int = 5) -> tuple[bool, int]:
     touch_count = 0
-    after = df.iloc[zone.formed_index + 4:]
+    end = max(zone.formed_index + 4, len(df) - exclude_recent)
+    after = df.iloc[zone.formed_index + 4 : end]
 
     for _, c in after.iterrows():
         if c["low"] <= zone.top and c["high"] >= zone.bottom:

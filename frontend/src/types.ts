@@ -30,6 +30,9 @@ export interface Setup {
   breakdown: Breakdown;
   zone: Zone;
   trade: Trade;
+  entry_status: string;
+  distance_pct: number;
+  confirmed: boolean;
 }
 
 export interface Bias {

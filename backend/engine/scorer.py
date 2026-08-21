@@ -58,6 +58,15 @@ def score_setup(setup: TradeSetup, htf_bias: dict) -> ScoredSetup:
     else:
         breakdown["timeframe"] = 0.0
 
+    if setup.confirmed:
+        score += 2.0
+        breakdown["confirmation"] = 2.0
+    elif setup.entry_status == "at_zone":
+        score += 1.0
+        breakdown["confirmation"] = 1.0
+    else:
+        breakdown["confirmation"] = 0.0
+
     return ScoredSetup(setup=setup, score=min(round(score, 1), 10.0), breakdown=breakdown)
 
 

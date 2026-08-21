@@ -13,10 +13,12 @@ PAIRS = ["EURUSD=X",
          "USDJPY=X",
          "GBPJPY=X"
          ]
-TIMEFRAMES = {"D1": {"interval":"1d", "period": "180d"},
-              "H4": {"interval":"1h", "period": "60d"},
-              "H1": {"interval":"1h", "period": "30d"}}
-
+TIMEFRAMES = {
+    "D1": {"interval": "1d", "period": "180d"},
+    "H4": {"interval": "1h", "period": "60d"},
+    "H1": {"interval": "1h", "period": "30d"},
+    "M15": {"interval": "15m", "period": "30d"},
+}
 PAIR_LABELS = {
     "EURUSD=X": "EURUSD",
     "GBPUSD=X": "GBPUSD",
